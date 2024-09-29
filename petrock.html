@@ -1,0 +1,299 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Your Pet Rock</title>
+    <style>
+        body {
+            font-family: 'Arial', sans-serif;
+            background-color: #e8f5e9;
+            text-align: center;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            height: 100vh;
+            margin: 0;
+        }
+
+        h1 {
+            color: #388e3c;
+            margin-bottom: 20px;
+        }
+
+        img {
+            width: 200px;
+            height: auto;
+            border-radius: 15px;
+            margin: 20px 0;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+        }
+
+        button {
+            background-color: #4CAF50;
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            font-size: 16px;
+            border-radius: 5px;
+            cursor: pointer;
+            margin: 8px;
+            transition: background-color 0.3s, transform 0.2s;
+            width: 150px;
+        }
+
+        button:hover {
+            background-color: #45a049;
+            transform: scale(1.05);
+        }
+
+        #button-container {
+            display: grid;
+            grid-template-columns: repeat(6, 1fr);
+            grid-template-rows: repeat(2, auto);
+            gap: 10px;
+            margin: 20px 0;
+        }
+
+        select, input {
+            padding: 10px;
+            margin: 10px;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+            font-size: 16px;
+            width: 250px;
+        }
+
+        #journal {
+            border: 1px solid #ccc;
+            padding: 10px;
+            margin-top: 10px;
+            height: 300px;
+            overflow-y: auto;
+            text-align: left;
+            width: 400px;
+            background-color: white;
+            border-radius: 5px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        #response {
+            font-weight: bold;
+            margin-top: 20px;
+            color: #555;
+        }
+    </style>
+</head>
+<body>
+    <h1>This is your very own rock!</h1>
+    <img id="rockImage" src="pet_rock.jpg" alt="Your Cool Rock">
+    
+    <input type="text" id="message" placeholder="Say something to your rock!" />
+    
+    <select id="mood-selector">
+        <option value="">Select Rock's Mood</option>
+        <option value="happy">Happy</option>
+        <option value="sad">Sad</option>
+        <option value="angry">Angry</option>
+        <option value="neutral">Neutral</option>
+    </select>
+    
+    <div id="button-container">
+        <button id="talk-button">Talk to Rock</button>
+        <button id="activity-button">Favorite Activity?</button>
+        <button id="feed-button">Feed Rock</button>
+        <button id="wash-button">Wash Rock</button>
+        <button id="hit-button">Hit Rock</button>
+        <button id="cycle-button">Cycle Images</button>
+    </div>    
+    
+    <h2>Rock's Journal</h2>
+    <div id="journal"></div>
+    <p id="response"></p>
+    
+    <audio id="happy-sound" src="happy_sound.mp3"></audio>
+    <audio id="hit-sound" src="hit_sound.mp3"></audio>
+    <audio id="fed-sound" src="fed_sound.mp3"></audio>
+    <audio id="washed-sound" src="washed_sound.mp3"></audio>
+    <audio id="sad-sound" src="sad_sound.mp3"></audio>
+    <audio id="angry-sound" src="angry_sound.mp3"></audio>
+    <audio id="neutral-sound" src="neutral-sound.mp3"></audio>
+    <audio id="spongebob-sound" src="spongebob_sound.mp3"></audio>
+
+    <script>
+        // Array of rock images
+        const rockImages = {
+            default: 'pet_rock.jpg',   // Default image
+            fed: 'rock_eating.webp',   // Image when fed
+            washed: 'washed_rock.jpg', // Image when washed
+            sad: 'sad_rock.jpg',       // Image when hit
+            happy: 'pet_rock3.jpg',    // Image for happy state
+            angry: 'angry_rock.jpg',
+            neutral: 'pet_rock4.jpg',
+        };
+
+        let currentRockImage = rockImages.default;
+
+        const activities = {
+            happy: ["rolling down a hill", "playing catch with a pebble", "sunbathing on a warm rock", "hanging out with other happy rocks"],
+            sad: ["sitting alone in a corner", "watching the rain", "thinking about the good old days", "listening to soft music"],
+            angry: ["yelling at the clouds", "rolling away from annoying stones", "cracking open a nut", "hiding under a bush"],
+            neutral: ["just hanging out", "watching the world go by", "taking a nap", "sitting quietly"]
+        };
+
+        // Mood-based responses
+        const responses = {
+            happy: [
+                "I'm feeling great! Let's roll around and have fun!",
+                "Today is a perfect day to enjoy the sunshine!",
+                "I'm as happy as a rock can be!",
+                "I could roll around all day!"
+            ],
+            sad: [
+                "I'm feeling a little down today...",
+                "Can we just sit quietly for a while?",
+                "The world seems a bit heavy for me right now.",
+                "I miss the good old times..."
+            ],
+            angry: [
+                "I don't want to talk right now!",
+                "Leave me alone!",
+                "I'm not in the mood for chit-chat!",
+                "Don't make me roll away!"
+            ],
+            neutral: [
+                "I'm just hanging out here, doing rock stuff.",
+                "It's a quiet day, don't you think?",
+                "I'm not feeling much right now.",
+                "Just another rock day."
+            ]
+        };
+
+        let journalEntries = [];
+
+        // Function to log an entry in the rock's journal
+        function logJournalEntry(message, mood) {
+            const entry = `${new Date().toLocaleString()}: You said "${message}" and the rock was feeling "${mood}".`;
+            journalEntries.push(entry);
+            updateJournalDisplay();
+        }
+
+        // Function to update the journal display
+        function updateJournalDisplay() {
+            const journalDisplay = document.getElementById('journal');
+            journalDisplay.innerHTML = "";
+            journalEntries.forEach(entry => {
+                const p = document.createElement('p');
+                p.textContent = entry;
+                journalDisplay.appendChild(p);
+            });
+        }
+
+        // Function to change rock image
+        function changeRockImage(image) {
+            document.getElementById('rockImage').src = image;
+        }
+
+        // Function to generate random response based on mood
+        function getMoodResponse(mood) {
+            const moodResponses = responses[mood] || [];
+            return moodResponses[Math.floor(Math.random() * moodResponses.length)];
+        }
+
+        // Handle mood changes
+        document.getElementById('mood-selector').addEventListener('change', function() {
+            const mood = this.value;
+            if (mood === 'happy') {
+                changeRockImage(rockImages.happy);
+                document.getElementById('happy-sound').play();
+            } else if (mood === 'sad') {
+                changeRockImage(rockImages.sad);
+                document.getElementById('sad-sound').play();
+            } else if (mood === 'angry') {
+                changeRockImage(rockImages.angry);
+                document.getElementById('angry-sound').play();
+            } else if (mood === 'neutral') {
+                changeRockImage(rockImages.neutral);
+                document.getElementById('neutral-sound').play();
+            } else {
+                changeRockImage(rockImages.default);
+            }
+        });
+
+        // Handle messages and responses
+        document.getElementById('talk-button').addEventListener('click', function() {
+            const message = document.getElementById('message').value;
+            const mood = document.getElementById('mood-selector').value;
+            const response = document.getElementById('response');
+
+            if (message.trim() === "") {
+                response.textContent = "Please say something to your rock!";
+            } else if (message.toLowerCase() === "it's not just a boulder, it's a rock") {
+                changeRockImage('spongebob_image.webp'); 
+                document.getElementById('spongebob-sound').play(); // Play the sound effect
+                response.textContent = 'The Pioneers used to ride these babies for miles';
+            } else {
+                const moodResponse = getMoodResponse(mood);
+                response.textContent = moodResponse;
+                logJournalEntry(message, mood);
+            }
+            document.getElementById('message').value = ''; // Clear the input
+        });
+
+        // Handle favorite activity
+        document.getElementById('activity-button').addEventListener('click', function() {
+            const mood = document.getElementById('mood-selector').value;
+            const activitiesList = activities[mood] || [];
+            const randomActivity = activitiesList[Math.floor(Math.random() * activitiesList.length)];
+            document.getElementById('response').textContent = `Your rock likes to: ${randomActivity}`;
+        });
+
+        // Handle feed action
+        document.getElementById('feed-button').addEventListener('click', function() {
+            changeRockImage(rockImages.fed);
+            document.getElementById('fed-sound').play();
+            document.getElementById('response').textContent = "You fed your rock! It looks satisfied.";
+            logJournalEntry("Fed the rock", "happy");
+        });
+
+        // Handle wash action
+        document.getElementById('wash-button').addEventListener('click', function() {
+            changeRockImage(rockImages.washed);
+            document.getElementById('washed-sound').play();
+            document.getElementById('response').textContent = "You washed your rock! It's sparkling clean!";
+            logJournalEntry("Washed the rock", "neutral");
+        });
+
+        // Handle hit action
+        document.getElementById('hit-button').addEventListener('click', function() {
+            changeRockImage(rockImages.sad);
+            document.getElementById('hit-sound').play();
+            document.getElementById('response').textContent = "You hit your rock! It's feeling sad.";
+            logJournalEntry("Hit the rock", "sad");
+        });
+
+        // Handle cycling through images
+        document.getElementById('cycle-button').addEventListener('click', function() {
+            const currentImage = document.getElementById('rockImage').src;
+            const nextImage = currentImage.includes(rockImages.default) ? rockImages.fed :
+                              currentImage.includes(rockImages.fed) ? rockImages.washed :
+                              currentImage.includes(rockImages.washed) ? rockImages.sad :
+                              currentImage.includes(rockImages.sad) ? rockImages.happy :
+                              rockImages.default;
+            changeRockImage(nextImage);
+            document.getElementById('response').textContent = "Cycling through images!";
+        });
+
+    </script>
+</body>
+</html>
+
+
+
+
+
+
+
+
